@@ -4,40 +4,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Calculator</title>
+    <title>나만의 계산기</title>
 
     <style>
         body {
             font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #eaf0f8;
         }
 
         .calculator {
-            width: 260px;
+            background-color: #333;
             padding: 20px;
-            background-color: white;
             border-radius: 15px;
-            box-shadow: 0 4px 10px gray;
+            width: 260px;
         }
 
         h2 {
+            color: white;
             text-align: center;
         }
 
         #display {
             width: 100%;
-            height: 50px;
-            margin-bottom: 15px;
+            height: 55px;
             box-sizing: border-box;
+            margin-bottom: 15px;
+            background-color: white;
+            border: none;
+            border-radius: 8px;
             text-align: right;
             font-size: 25px;
-            border: none;
-            background-color: #f1f3f5;
-            border-radius: 8px;
             padding: 10px;
         }
 
@@ -48,29 +48,35 @@
         }
 
         button {
-            height: 50px;
-            font-size: 20px;
+            height: 55px;
             border: none;
             border-radius: 8px;
-            background-color: #e3eaf5;
+            font-size: 20px;
             cursor: pointer;
+            background-color: #eeeeee;
         }
 
         button:hover {
-            background-color: #c7d8f0;
+            background-color: #cccccc;
         }
 
         .operator {
-            background-color: #b7d0f5;
-        }
-
-        .equal {
-            background-color: #6d9ee8;
+            background-color: orange;
             color: white;
         }
 
+        .operator:hover {
+            background-color: darkorange;
+        }
+
         .clear {
-            background-color: #f4caca;
+            background-color: #e57373;
+            color: white;
+        }
+
+        .equal {
+            background-color: #66bb6a;
+            color: white;
         }
     </style>
 </head>
@@ -78,20 +84,20 @@
 <body>
 
     <div class="calculator">
-        <h2>My Calculator</h2>
+        <h2>MY CALCULATOR</h2>
 
         <input type="text" id="display" value="0" readonly>
 
         <div class="buttons">
-            <button class="clear" data-action="clear">AC</button>
-            <button data-action="delete">⌫</button>
+            <button class="clear" id="clear">AC</button>
+            <button id="delete">DEL</button>
             <button class="operator" data-operator="/">÷</button>
             <button class="operator" data-operator="*">×</button>
 
             <button data-number="7">7</button>
             <button data-number="8">8</button>
             <button data-number="9">9</button>
-            <button class="operator" data-operator="-">−</button>
+            <button class="operator" data-operator="-">-</button>
 
             <button data-number="4">4</button>
             <button data-number="5">5</button>
@@ -101,148 +107,161 @@
             <button data-number="1">1</button>
             <button data-number="2">2</button>
             <button data-number="3">3</button>
-            <button class="equal" data-action="calculate">=</button>
+            <button class="equal" id="equal">=</button>
 
-            <button data-action="sign">±</button>
             <button data-number="0">0</button>
-            <button data-action="decimal">.</button>
-            <button class="clear" data-action="clear">C</button>
+            <button id="decimal">.</button>
         </div>
     </div>
 
     <script>
+        // 계산기에 필요한 변수
+        let currentInput = "0";
+        let previousInput = null;
+        let operator = null;
+        let shouldResetDisplay = false;
+
         const display = document.getElementById("display");
 
-        let firstNumber = null;
-        let operator = null;
-        let waitingForSecondNumber = false;
-
-        // 숫자 입력
-        function inputNumber(number) {
-            if (waitingForSecondNumber) {
-                display.value = number;
-                waitingForSecondNumber = false;
-            } else {
-                if (display.value === "0") {
-                    display.value = number;
-                } else {
-                    display.value += number;
-                }
-            }
+        // 화면에 숫자 표시하기
+        function updateDisplay() {
+            display.value = currentInput;
         }
 
-        // 연산자 선택
+        // 숫자 입력 함수
+        function inputNumber(number) {
+
+            if (shouldResetDisplay) {
+                currentInput = number;
+                shouldResetDisplay = false;
+            }
+            else if (currentInput === "0") {
+                currentInput = number;
+            }
+            else {
+                currentInput += number;
+            }
+
+            updateDisplay();
+        }
+
+        // 소수점 입력 함수
+        function inputDecimal() {
+            if (shouldResetDisplay) {
+                currentInput = "0";
+                shouldResetDisplay = false;
+            }
+
+            if (!currentInput.includes(".")) {
+                currentInput += ".";
+            }
+
+            updateDisplay();
+        }
+
+        // 연산자 선택 함수
         function chooseOperator(nextOperator) {
-            if (operator !== null && !waitingForSecondNumber) {
+
+            if (operator !== null && !shouldResetDisplay) {
                 calculate();
             }
 
-            firstNumber = Number(display.value);
+            previousInput = currentInput;
             operator = nextOperator;
-            waitingForSecondNumber = true;
+            shouldResetDisplay = true;
         }
 
-        // 계산하기
+        // 실제 계산을 수행하는 함수
         function calculate() {
-            if (operator === null || waitingForSecondNumber) {
+
+            if (operator === null || previousInput === null) {
                 return;
             }
 
-            const secondNumber = Number(display.value);
+            let num1 = Number(previousInput);
+            let num2 = Number(currentInput);
             let result;
 
             if (operator === "+") {
-                result = firstNumber + secondNumber;
-            } else if (operator === "-") {
-                result = firstNumber - secondNumber;
-            } else if (operator === "*") {
-                result = firstNumber * secondNumber;
-            } else if (operator === "/") {
-                if (secondNumber === 0) {
-                    display.value = "Error";
+                result = num1 + num2;
+            }
+            else if (operator === "-") {
+                result = num1 - num2;
+            }
+            else if (operator === "*") {
+                result = num1 * num2;
+            }
+            else if (operator === "/") {
+
+                if (num2 === 0) {
+                    currentInput = "0으로 나눌 수 없음";
+                    previousInput = null;
                     operator = null;
-                    firstNumber = null;
-                    waitingForSecondNumber = true;
+                    shouldResetDisplay = true;
+                    updateDisplay();
                     return;
                 }
-                result = firstNumber / secondNumber;
+
+                result = num1 / num2;
             }
 
-            display.value = String(Number(result.toPrecision(12)));
+            // 소수점 계산 오차 줄이기
+            currentInput = String(Number(result.toFixed(10)));
 
-            firstNumber = null;
+            previousInput = null;
             operator = null;
-            waitingForSecondNumber = true;
+            shouldResetDisplay = true;
+
+            updateDisplay();
         }
 
-        // 초기화
-        function clearDisplay() {
-            display.value = "0";
-            firstNumber = null;
+        // 전체 초기화 함수
+        function clearCalculator() {
+            currentInput = "0";
+            previousInput = null;
             operator = null;
-            waitingForSecondNumber = false;
+            shouldResetDisplay = false;
+
+            updateDisplay();
         }
 
-        // 마지막 숫자 삭제
-        function deleteLast() {
-            if (waitingForSecondNumber) return;
+        // 마지막 숫자 삭제 함수
+        function deleteNumber() {
 
-            display.value = display.value.slice(0, -1);
-
-            if (display.value === "" || display.value === "-") {
-                display.value = "0";
+            if (shouldResetDisplay) {
+                return;
             }
-        }
 
-        // 소수점 입력
-        function inputDecimal() {
-            if (waitingForSecondNumber) {
-                display.value = "0.";
-                waitingForSecondNumber = false;
-            } else if (!display.value.includes(".")) {
-                display.value += ".";
+            if (currentInput.length > 1) {
+                currentInput = currentInput.slice(0, -1);
             }
-        }
-
-        // 양수와 음수 변경
-        function changeSign() {
-            if (display.value !== "0") {
-                display.value = String(-Number(display.value));
+            else {
+                currentInput = "0";
             }
+
+            updateDisplay();
         }
 
-        // 버튼 클릭 이벤트
-        document.querySelector(".buttons").addEventListener("click", function(event) {
-            const button = event.target;
-
-            if (button.dataset.number !== undefined) {
+        // 숫자 버튼에 클릭 이벤트 연결
+        document.querySelectorAll("[data-number]").forEach(function(button) {
+            button.addEventListener("click", function() {
                 inputNumber(button.dataset.number);
-            }
-
-            if (button.dataset.operator) {
-                chooseOperator(button.dataset.operator);
-            }
-
-            if (button.dataset.action === "calculate") {
-                calculate();
-            }
-
-            if (button.dataset.action === "clear") {
-                clearDisplay();
-            }
-
-            if (button.dataset.action === "delete") {
-                deleteLast();
-            }
-
-            if (button.dataset.action === "decimal") {
-                inputDecimal();
-            }
-
-            if (button.dataset.action === "sign") {
-                changeSign();
-            }
+            });
         });
+
+        // 연산자 버튼에 클릭 이벤트 연결
+        document.querySelectorAll("[data-operator]").forEach(function(button) {
+            button.addEventListener("click", function() {
+                chooseOperator(button.dataset.operator);
+            });
+        });
+
+        // 나머지 버튼에 클릭 이벤트 연결
+        document.getElementById("decimal").addEventListener("click", inputDecimal);
+        document.getElementById("equal").addEventListener("click", calculate);
+        document.getElementById("clear").addEventListener("click", clearCalculator);
+        document.getElementById("delete").addEventListener("click", deleteNumber);
+
     </script>
 
 </body>
