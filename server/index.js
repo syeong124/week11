@@ -15,10 +15,21 @@ const server = http.createServer((req,res)=>{
     //바디 전송
     //res.write("Hello, Node");
     //res.end();//응답 종료
-    res.setHeader("Content-Type","text/html");
-    const readStream = fs.createReadStream(__dirname+"/index.html","utf8");
-    readStream.pipe(res);
-
+    //res.setHeader("Content-Type","text/html");
+    //const readStream = fs.createReadStream(__dirname+"/index.html","utf8");
+    //readStream.pipe(res);
+    const {method, url} = req;
+    res.setHeader("Content-Type","text/plain");
+    if( method === "GET" && url === "/home") {
+        res.statusCode =200;
+        res.end("HOME");
+    } else if( method === "GET" && url === "/about") {
+        res.statusCode =200;
+        res.end("ABOUT");
+    } else {
+        res.statusCode = 404;
+        res.end("NOT FOUND");
+    }
 });
 //서버 실행
 server.listen(PORT,()=>{
